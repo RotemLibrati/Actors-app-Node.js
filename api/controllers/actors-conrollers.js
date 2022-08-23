@@ -22,20 +22,11 @@ const getActors = async (req, res) => {
     try {
         const keys = await cache();
         if (keys.length > 0) {
-            keys.map(key => {
-                client.get(key)
-                    .then((result) => {
-                        data.push(JSON.parse(result));
-                    })
-                    .catch((err) => {
-                        console.error("error:", err.message);
-                    })
-            });
+            for await (const key of client.scanIterator()){
+                data.push(JSON.parse(await client.get(key)));
+            }
             console.log("redis");
-            setTimeout(() => {
-                res.json(data);
-            }, 500);
-
+            res.json(data);
         } else {
             const actors = await axios.get('https://api.tvmaze.com/shows/1/cast');
             actors.data.map(actor => {
