@@ -1,5 +1,6 @@
 const axios = require('axios');
 const client = require('../../redis/redis');
+const config = require('config');
 
 
 async function cache(req, res) {
@@ -15,6 +16,7 @@ async function cache(req, res) {
 }
 
 const getActors = async (req, res) => {
+    const expiration = config.get('EXPIRATION');
     const data = [];
     try {
         const keys = await cache();
@@ -36,7 +38,7 @@ const getActors = async (req, res) => {
         } else {
             const actors = await axios.get('https://api.tvmaze.com/shows/1/cast');
             actors.data.map(actor => {
-                client.setEx(JSON.stringify(actor.person.id), 30, JSON.stringify({
+                client.setEx(JSON.stringify(actor.person.id), expiration, JSON.stringify({
                     "id": actor.person.id,
                     "name": actor.person.name,
                     "birthday": actor.person.birthday,
