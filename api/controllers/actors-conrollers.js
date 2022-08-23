@@ -4,7 +4,7 @@ const config = require('config');
 const fs = require('fs-extra');
 
 
-async function cache(req, res) {
+async function cache(req, res) { //Function for check if the cache is empty 
     var keys;
     await client.keys('*')
         .then(result => {
@@ -16,7 +16,7 @@ async function cache(req, res) {
     return keys;
 }
 
-const getActors = async (req, res) => {
+const getActors = async (req, res) => { //Function for get and send data to client from api or cache
     const expiration = config.get('EXPIRATION');
     const data = [];
     try {
@@ -54,7 +54,7 @@ const getActors = async (req, res) => {
     }
 };
 
-const writeComment = (req, res) => {
+const writeComment = (req, res) => { // Function for create txt file and write or append comments
     try {
         const jsonString = JSON.stringify(req.body);
         if (!fs.existsSync('./comments.txt')) {
@@ -79,7 +79,7 @@ const writeComment = (req, res) => {
     
 };
 
-const deleteActor = async (req, res) => {
+const deleteActor = async (req, res) => { // Function for delete actor from cache 
     try {
         const id = req.body.id;
         await client.del(id.toString());
