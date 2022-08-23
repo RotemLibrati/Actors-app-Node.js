@@ -1,6 +1,7 @@
 const axios = require('axios');
 const client = require('../../redis/redis');
 const config = require('config');
+const fs = require('fs-extra');
 
 
 async function cache(req, res) {
@@ -24,7 +25,7 @@ const getActors = async (req, res) => {
             keys.map(key => {
                 client.get(key)
                     .then((result) => {
-                        data.push(JSON.parse(result));    
+                        data.push(JSON.parse(result));
                     })
                     .catch((err) => {
                         console.error("error:", err.message);
@@ -33,7 +34,7 @@ const getActors = async (req, res) => {
             console.log("redis");
             setTimeout(() => {
                 res.json(data);
-            }, 3000);
+            }, 500);
 
         } else {
             const actors = await axios.get('https://api.tvmaze.com/shows/1/cast');
@@ -61,4 +62,43 @@ const getActors = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+const writeComment = (req, res) => {
+    try {
+        const jsonString = JSON.stringify(req.body);
+        if (!fs.existsSync('./comments.txt')) {
+            fs.writeFile('./comments.txt', jsonString + ",", 'utf8', function (err) {
+                if (err) {
+                    return console.log(err.message);
+                }
+                res.send("File created and saved");
+            });
+        } else {
+            fs.appendFile('./comments.txt', jsonString + ",", 'utf8', function (err) {
+                if (err) {
+                    return console.log(err.message);
+                }
+                res.send("File saved");
+            });
+        }
+    } catch(err){
+        console.error(err.message);
+        res.status(500).send("Server Error");
+    }
+    
+};
+
+const deleteActor = async (req, res) => {
+    try {
+        const id = req.body.id;
+        await client.del(id.toString());
+        res.send("Actor was deleted");
+    } catch(err){
+        console.log("error: ", err.message);
+        res.status(500).send("Server Error");
+    }
+};
+
 exports.getActors = getActors;
+exports.writeComment = writeComment;
+exports.deleteActor = deleteActor;
